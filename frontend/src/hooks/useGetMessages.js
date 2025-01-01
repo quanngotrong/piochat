@@ -10,7 +10,7 @@ const useGetMessages = () => {
 		const getMessages = async () => {
 			setLoading(true);
 			try {
-				const res = await fetch(`/api/messages/${selectedConversation._id}`);
+				const res = await fetch(`/api/messages/${selectedConversation.username}`);
 				const data = await res.json();
 				if (data.error) throw new Error(data.error);
 				setMessages(data);
@@ -21,8 +21,8 @@ const useGetMessages = () => {
 			}
 		};
 
-		if (selectedConversation?._id) getMessages();
-	}, [selectedConversation?._id, setMessages]);
+		if (selectedConversation?.username) getMessages();
+	}, [selectedConversation?.username, setMessages]);
 
 	return { messages, loading };
 };

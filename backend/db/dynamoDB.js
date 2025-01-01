@@ -115,3 +115,15 @@ export const createMessage = async (conversationId, senderId, content) => {
   await db.put(params).promise();
   return params.Item;
 };
+
+export const getMessagesByConversationId = async (conversationId) => {
+  const params = {
+    TableName: "Messages",
+  KeyConditionExpression: "conversationId = :conversationId",
+  ExpressionAttributeValues: {
+    ":conversationId": conversationId,
+  },
+  };
+  const result = await db.query(params).promise();
+  return result.Items;
+};
