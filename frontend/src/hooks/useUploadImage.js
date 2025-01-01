@@ -12,17 +12,27 @@ const useUploadImage = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-
       // upload s3 here
-      const res = await fetch("/api/upload", {
+      let res = await fetch("/api/messages/presigned-url", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filename: file.name }),
+      });
+      res = await res.json();
+
+      if (!res) throw new Error(res);
+
+      await fetch(res.url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
       });
 
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-
-      const imageUrl = data.url;
+      const imageUrl = res.key;
 
       const messageRes = await fetch(
         `/api/messages/send/${selectedConversation.username}`,
@@ -50,3 +60,4 @@ const useUploadImage = () => {
 };
 
 export default useUploadImage;
+

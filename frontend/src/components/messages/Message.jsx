@@ -25,7 +25,7 @@ const Message = ({ message }) => {
 
       {message.type === "image" ? (
         <div className="chat-bubble">
-          <img src={message.content} alt="Sent image" />
+          <img src={`https://d1lg3ccrzd340j.cloudfront.net/${message.content}`} alt="Image" />
         </div>
       ) : (
         <div

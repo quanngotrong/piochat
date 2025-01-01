@@ -1,5 +1,7 @@
 import { getReceiverSocketId, io } from "../socket/socket.js";
 import * as dynamoDB from "../db/dynamoDB.js";
+import { parse } from "path";
+import * as s3Util from "../utils/s3.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -23,7 +25,8 @@ export const sendMessage = async (req, res) => {
       conversation.conversationId,
       senderUsername,
       message,
-      type);
+      type,
+    );
 
     if (newMessage) {
       await dynamoDB.addMessageToConversation(
@@ -65,6 +68,21 @@ export const getMessages = async (req, res) => {
     res.status(200).json(messages);
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const getUploadPresignedUrl = async (req, res) => {
+  try {
+    const filename = req.body.filename;
+
+    const { name, ext } = parse(filename);
+    const newFilename = `${Date.now()}${ext}_${name}`;
+
+    const key = `messages/images/${newFilename}`;
+    const result = await s3Util.genUploadPresignedUrl(key);
+    res.status(200).json({ ...result, key });
+  } catch (error) {
+    console.log("Error in getUploadPresignedUrl controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
