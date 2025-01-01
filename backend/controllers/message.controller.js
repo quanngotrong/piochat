@@ -1,6 +1,7 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
+import * as dynamoDB from "../db/dynamoDB.js";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -8,28 +9,18 @@ export const sendMessage = async (req, res) => {
     const { username: receiverUsername } = req.params;
     const senderUsername = req.user.username;
 
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderUsername, receiverUsername] },
-    });
+    let conversation = await dynamoDB.getConversation([senderUsername, receiverUsername]);
 
+    
     if (!conversation) {
-      conversation = await Conversation.create({
-        participants: [senderUsername, receiverUsername],
-      });
+      conversation = await dynamoDB.createConversation([senderUsername, receiverUsername]);
     }
 
-    const newMessage = new Message({
-      senderUsername,
-      receiverUsername,
-      message,
-    });
+    const newMessage = await dynamoDB.createMessage(conversation.conversationId, senderUsername, message);
 
     if (newMessage) {
-      conversation.messages.push(newMessage._id);
+      await dynamoDB.addMessageToConversation(conversation.conversationId, newMessage.messageId);
     }
-
-    // this will run in parallel
-    await Promise.all([conversation.save(), newMessage.save()]);
 
     // SOCKET IO FUNCTIONALITY WILL GO HERE
     const receiverSocketId = getReceiverSocketId(receiverUsername);
@@ -47,16 +38,14 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const { id: userToChatId } = req.params;
-    const senderId = req.user._id;
+    const { username: userToChatUsername } = req.params;
+    const senderUsername = req.user.username;
 
-    const conversation = await Conversation.findOne({
-      participants: { $all: [senderId, userToChatId] },
-    }).populate("messages"); // NOT REFERENCE BUT ACTUAL MESSAGES
+    const conversation = await dynamoDB.getConversation([senderUsername, userToChatUsername]);
 
     if (!conversation) return res.status(200).json([]);
 
-    const messages = conversation.messages;
+    const messages = await dynamoDB.getMessagesByConversationId(conversation.conversationId);
 
     res.status(200).json(messages);
   } catch (error) {
