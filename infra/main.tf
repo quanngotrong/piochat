@@ -19,3 +19,7 @@ module "acm_dns_validation" {
 output "acm_certificate_arn" {
   value = module.acm_dns_validation.acm_certificate_arn
 }
+
+module "vpc" {
+  source = "./modules/vpc"
+}
