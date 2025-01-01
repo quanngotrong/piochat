@@ -17,9 +17,7 @@ const protectRoute = async (req, res, next) => {
       return res.status(401).json({ error: "Unauthorized - Invalid Token" });
     }
 
-    console.log(decoded);
     const userResult = await dynamoDB.findUserByUsername(decoded.username);
-    console.log(userResult);
 
     if (!userResult.Item) {
       return res.status(404).json({ error: "User not found" });

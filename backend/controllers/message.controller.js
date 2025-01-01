@@ -9,17 +9,29 @@ export const sendMessage = async (req, res) => {
     const { username: receiverUsername } = req.params;
     const senderUsername = req.user.username;
 
-    let conversation = await dynamoDB.getConversation([senderUsername, receiverUsername]);
+    let conversation = await dynamoDB.getConversation([
+      senderUsername,
+      receiverUsername,
+    ]);
 
-    
     if (!conversation) {
-      conversation = await dynamoDB.createConversation([senderUsername, receiverUsername]);
+      conversation = await dynamoDB.createConversation([
+        senderUsername,
+        receiverUsername,
+      ]);
     }
 
-    const newMessage = await dynamoDB.createMessage(conversation.conversationId, senderUsername, message);
+    const newMessage = await dynamoDB.createMessage(
+      conversation.conversationId,
+      senderUsername,
+      message,
+    );
 
     if (newMessage) {
-      await dynamoDB.addMessageToConversation(conversation.conversationId, newMessage.messageId);
+      await dynamoDB.addMessageToConversation(
+        conversation.conversationId,
+        newMessage.messageId,
+      );
     }
 
     // SOCKET IO FUNCTIONALITY WILL GO HERE
@@ -41,11 +53,16 @@ export const getMessages = async (req, res) => {
     const { username: userToChatUsername } = req.params;
     const senderUsername = req.user.username;
 
-    const conversation = await dynamoDB.getConversation([senderUsername, userToChatUsername]);
+    const conversation = await dynamoDB.getConversation([
+      senderUsername,
+      userToChatUsername,
+    ]);
 
     if (!conversation) return res.status(200).json([]);
 
-    const messages = await dynamoDB.getMessagesByConversationId(conversation.conversationId);
+    const messages = await dynamoDB.getMessagesByConversationId(
+      conversation.conversationId,
+    );
 
     res.status(200).json(messages);
   } catch (error) {
