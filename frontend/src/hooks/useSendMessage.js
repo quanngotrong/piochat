@@ -16,7 +16,7 @@ const useSendMessage = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ message, type: "text" }),
         },
       );
       const data = await res.json();

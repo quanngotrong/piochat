@@ -1,11 +1,9 @@
-import Conversation from "../models/conversation.model.js";
-import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 import * as dynamoDB from "../db/dynamoDB.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, type } = req.body;
     const { username: receiverUsername } = req.params;
     const senderUsername = req.user.username;
 
@@ -25,7 +23,7 @@ export const sendMessage = async (req, res) => {
       conversation.conversationId,
       senderUsername,
       message,
-    );
+      type);
 
     if (newMessage) {
       await dynamoDB.addMessageToConversation(
