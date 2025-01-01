@@ -8,7 +8,7 @@ import AWS from "aws-sdk";
 // });
 
 AWS.config.update({
-  region: process.env.AWS_REGION || "ap-southeast-1", // Default to "us-east-1" if AWS_REGION is not set
+  region: process.env.AWS_REGION || "ap-southeast-1",
 });
 
 export const db = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
@@ -98,7 +98,7 @@ export const addMessageToConversation = async (conversationId, messageId) => {
   return result.Attributes;
 };
 
-export const createMessage = async (conversationId, senderId, content) => {
+export const createMessage = async (conversationId, senderId, content, type) => {
   const messageId = AWS.util.uuid.v4(); // Generate a unique ID for the message
   const params = {
     TableName: "Messages",
@@ -107,6 +107,7 @@ export const createMessage = async (conversationId, senderId, content) => {
       conversationId,
       senderId,
       content,
+      type,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
