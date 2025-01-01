@@ -7,6 +7,10 @@ import AWS from "aws-sdk";
 //   endpoint: process.env.endpoint,
 // });
 
+AWS.config.update({
+  region: process.env.AWS_REGION || "ap-southeast-1", // Default to "us-east-1" if AWS_REGION is not set
+});
+
 export const db = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
 
 export const findUserByUsername = async (username) => {
@@ -43,4 +47,71 @@ export const getOtherUsers = async (username) => {
   const result = await db.scan(params).promise();
   const filteredUsers = result.Items;
   return filteredUsers;
+};
+
+export const createConversation = async (participants) => {
+  const conversationId = AWS.util.uuid.v4(); // Generate a unique ID for the conversation
+  const params = {
+    TableName: "Conversations",
+    Item: {
+      conversationId,
+      participants,
+      messages: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  };
+
+  await db.put(params).promise();
+  return params.Item;
+};
+
+export const getConversation = async (participants) => {
+  const params = {
+    TableName: "Conversations",
+    FilterExpression: "contains(participants, :sender) and contains(participants, :receiver)",
+    ExpressionAttributeValues: {
+      ":sender": participants[0],
+      ":receiver": participants[1],
+    },
+  };
+
+  const result = await db.scan(params).promise();
+  return result.Items[0];
+};
+
+export const addMessageToConversation = async (conversationId, messageId) => {
+  const params = {
+    TableName: "Conversations",
+    Key: {
+      conversationId,
+    },
+    UpdateExpression: "SET messages = list_append(messages, :messageId), updatedAt = :updatedAt",
+    ExpressionAttributeValues: {
+      ":messageId": [messageId],
+      ":updatedAt": new Date().toISOString(),
+    },
+    ReturnValues: "ALL_NEW",
+  };
+
+  const result = await db.update(params).promise();
+  return result.Attributes;
+};
+
+export const createMessage = async (conversationId, senderId, content) => {
+  const messageId = AWS.util.uuid.v4(); // Generate a unique ID for the message
+  const params = {
+    TableName: "Messages",
+    Item: {
+      messageId,
+      conversationId,
+      senderId,
+      content,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  };
+
+  await db.put(params).promise();
+  return params.Item;
 };
