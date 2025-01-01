@@ -7,4 +7,11 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "s3 bucket name"
   type        = string
+  default     = "piochat-s3-quan-test"
+}
+
+variable "domain_name" {
+  description = "domain name"
+  type        = string
+  default     = "ngotrongquanweb.xyz"
 }
